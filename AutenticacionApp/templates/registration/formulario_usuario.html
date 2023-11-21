@@ -1,0 +1,38 @@
+{% extends "KabasisWebApp/base.html" %}
+{% load static %}
+
+{% block content %}
+<section class="page-section cta" style="margin-top: 30px; margin-bottom: 30px;">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+
+                        <!-- Encabezado y botón de volver -->
+                        <div class="text-center">
+                            <button class="btn btn-info mx-2 fas fa-arrow-left d-flex" onclick="goBack()">&nbsp;volver</button>
+                        </div>
+                        <br>
+                        <h1 class="card-title" style="text-align: center;">Formulario de Usuario</h1>
+
+                        <a class="btn btn-primary btn-block" style="margin-bottom: 20px;" href="{% url 'carga_masiva' %}">Carga masiva de usuarios</a>
+
+                        <!-- Formulario para el registro del usuario -->
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {{ formulario.as_p }}
+
+                            <!-- Botón para enviar el formulario -->
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-success btn-lg btn-block">Guardar</button>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "KabasisWebApp/base.html" %}
+
+{% block content %}
+<section class="page-section cta" style="margin-top: 40px; margin-bottom: 40px;">
+    <div class="container" style="text-align: center;">
+        <h1 style="color: white;">Videos relacionados a la unidad</h1>
+        <ul style="list-style-type: none">
+            {% for video in videos %}
+            <li>
+                <h2 style="color: white; margin-top: 40px;">{{ video.titulo }}</h2>
+                <p style="color: white;">{{ video.descripcion }}</p>
+                <div class="video-container">
+                    
+                    <iframe width="400" height="225" src="{{ video.get_embedded_url }}" frameborder="0" allowfullscreen
+                        style="width: 600px; height: 425px; border: 4px solid white; padding: 2rem; color: white;"></iframe>
+
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endblock %}
