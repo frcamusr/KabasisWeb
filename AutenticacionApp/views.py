@@ -183,40 +183,90 @@ def menu_administracion(request):
 ##carga masiva de usuarios##
 
 
+
+
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from .forms import CSVUploadForm
+from .models import CustomUser, Empresa
+import csv
+from django.db import transaction
+
+from django.db.utils import IntegrityError
+
+
+
+
+from django.db.utils import IntegrityError
+
 @transaction.atomic
 def carga_masiva(request):
     usuarios_creados = 0
+    usuarios_no_creados = 0
+    usuarios_existente = []
+    usuarios_empresa_inexistente = []
+
     if request.method == 'POST':
         form = CSVUploadForm(request.POST, request.FILES)
         if form.is_valid():
-            csv_file = request.FILES['archivo_csv'].read().decode('utf-8')
-            csv_data = csv.reader(csv_file.splitlines())
+            try:
+                with transaction.atomic():
+                    csv_file = request.FILES['archivo_csv'].read().decode('utf-8')
+                    csv_data = csv.reader(csv_file.splitlines())
 
-            # Itera sobre cada fila del CSV para crear los usuarios
-            for row in csv_data:
-                password, username, first_name, last_name, email, tipo_usuario = row[:6]  # Ajusta según tu CSV
+                    for row in csv_data:
+                        password, username, first_name, last_name, email, empresa_nombre = row[:6]
+                        tipo_usuario = 'Estudiante'  # Establece el tipo de usuario por defecto
 
-                # Crea un nuevo usuario con los datos del CSV
-                new_user = CustomUser.objects.create(
-                    username=username,
-                    first_name=first_name,
-                    last_name=last_name,
-                    email=email,
-                    tipo_usuario=tipo_usuario
-                )
+                        try:
+                            empresa = Empresa.objects.get(nombre_empresa=empresa_nombre)
+                        except Empresa.DoesNotExist:
+                            usuarios_empresa_inexistente.append(username)
+                            usuarios_no_creados += 1
+                            continue
 
-                # Usa set_password para cifrar y guardar la contraseña
-                new_user.set_password(password)
-                new_user.save()
+                        try:
+                            with transaction.atomic():
+                                new_user = CustomUser.objects.create(
+                                    username=username,
+                                    first_name=first_name,
+                                    last_name=last_name,
+                                    email=email,
+                                    tipo_usuario=tipo_usuario,
+                                    empresa=empresa
+                                )
+                                new_user.set_password(password)
+                                new_user.save()
+                                usuarios_creados += 1
+                        except IntegrityError:
+                            usuarios_existente.append(username)
+                            usuarios_no_creados += 1
 
-                usuarios_creados += 1  # Incrementa el contador
+                # Resto del código para mostrar los mensajes
 
-            # Muestra el mensaje de éxito con la cantidad de usuarios creados
-            messages.success(request, f'Se han creado {usuarios_creados} usuarios exitosamente.')
+                if usuarios_existente and usuarios_no_creados:
+                    messages.warning(request, f'Se han creado {usuarios_creados} usuarios exitosamente. No se guardaron {usuarios_no_creados} usuarios. Los siguientes usuarios ya existían y no se crearon: {", ".join(usuarios_existente)}. Los siguientes usuarios tenian asociada una empresa que no existe: {", ".join(usuarios_empresa_inexistente)} .')
+                elif usuarios_existente:
+                    messages.warning(request, f'Se han creado {usuarios_creados} usuarios exitosamente. No se guardaron {usuarios_no_creados} usuarios. Los siguientes usuarios ya existían y no se crearon: {", ".join(usuarios_existente)}')
+                
+                elif usuarios_empresa_inexistente:
+                    messages.warning(request, f'Se han creado {usuarios_creados} usuarios exitosamente. No se guardaron {usuarios_no_creados} usuarios. Los siguientes usuarios no se crearon por empresas inexistentes: {", ".join(usuarios_empresa_inexistente)}')
+                else:
+                    messages.success(request, f'Se han creado {usuarios_creados} usuarios exitosamente.')
 
-            # Redirige después de cargar los usuarios
-            return redirect('carga_masiva')
+                return redirect('carga_masiva')
+
+            except Exception as e:
+                messages.error(request, f'Error general: {e}')
+
     else:
-        form = CSVUploadForm()  # Si no es un POST, muestra el formulario en blanco
+        form = CSVUploadForm()
 
     return render(request, 'registration/carga_masiva.html', {'form': form})
+
+
+
+
+
+
+

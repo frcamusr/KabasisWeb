@@ -4,12 +4,12 @@ from django.contrib.auth.models import AbstractUser
 class CustomUser(AbstractUser):
     TIPO_USUARIO_CHOICES = (
         ('', 'Selecciona el tipo de usuario'),  # Opción en blanco
-        ('editor_contenido', 'Editor de contenido'),
-        ('revisor', 'Revisor'),
-        ('estudiante', 'Estudiante'),
-        ('visualizador', 'Visualizador'),
-        ('reporteria', 'Reporteria'),
-        ('administrador_empresa', 'Administrador empresa'),
+        ('Editor_contenido', 'Editor de contenido'),
+        ('Revisor', 'Revisor'),
+        ('Estudiante', 'Estudiante'),
+        ('Visualizador', 'Visualizador'),
+        ('Reporteria', 'Reporteria'),
+        ('Administrador_empresa', 'Administrador empresa'),
     )
 
     tipo_usuario = models.CharField(
