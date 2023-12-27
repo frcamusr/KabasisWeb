@@ -1,6 +1,6 @@
 body {
   font-family: 'Lora';
-  background: linear-gradient(rgba(46, 34, 30, 0.65), rgba(12, 7, 5, 0.65)), url("../img/azulcandado.png");
+  background: linear-gradient(rgba(46, 34, 30, 0.65), rgba(12, 7, 5, 0.65)), url("../img/Cursos.png");
   background-attachment: fixed;
   background-position: center;
   background-size: cover;
@@ -44,8 +44,8 @@ p {
 }
 
 .page-section {
-  margin-top: 5rem;
-  margin-bottom: 5rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
 }
 
 .section-heading {
@@ -154,10 +154,9 @@ p {
 }
 
 .cta {
-  padding-top: 5rem;
-  padding-bottom: 5rem;
+  padding-top: 2rem;
+  padding-bottom: 4rem;
   background-image: linear-gradient(to top, rgba(150, 0, 0, 0.6), #123989, #296FFA, rgba(150, 0, 0, 0.6)); /* Fondo degradado */
-
 }
 
 .cta .cta-inner {
@@ -280,6 +279,7 @@ ul.errorlist{
   color: red;
 }
 
+/*Icono Kabasis portada-cabecera*/
 .imagen-kabasis {
   display: block; /* Para convertir la imagen en un elemento en bloque */
   margin: 0 auto; /* Para centrar horizontalmente la imagen */
@@ -287,4 +287,183 @@ ul.errorlist{
   /* Otros estilos si los necesitas */
   margin-top: 10px;
   margin-bottom: 0px;
+}
+
+
+/*iconos triada kab*/
+.icon-container {
+  display: flex;
+  justify-content: center; /* Alinea los iconos en el centro horizontal */
+}
+
+.icon {
+  text-align: center;
+  margin: 20px; /* Agrega márgenes para separar los iconos */
+  flex: 1; /* Esto permite que los iconos ocupen espacios iguales en el contenedor flex */
+}
+/*fin iconos triada kab*/
+
+
+.video-container {
+  max-width: 100%; /* Establece un ancho máximo para el contenedor del video */
+  width: 80%; /* Ajusta el ancho del contenedor según tus necesidades */
+  margin: 0 auto; /* Centra el contenedor horizontalmente en la sección */
+}
+
+
+.video-container iframe {
+  width: 100%; /* El video ocupará todo el ancho del contenedor */
+  height: 100%; /* El video ocupará toda la altura del contenedor */
+}
+
+
+.boton-volver {
+  background-color: blue;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+}
+
+.boton-volver i {
+  margin-right: 5px;
+}
+
+
+.kabasis-color {
+  background-image: linear-gradient(to top, rgba(150, 0, 0, 0.6), #123989, #296FFA, rgba(150, 0, 0, 0.6)); /* Fondo degradado */
+}
+
+.kabasis-boton {
+  background-image: linear-gradient(to top, blue, blue, blue ); /* Fondo degradado */
+  color: white;
+
+}
+
+.kabasis-boton:hover {
+  background-image: linear-gradient(to top, rgb(63, 63, 250), rgb(73, 73, 252), rgb(112, 112, 252)); /* Mantiene el gradiente en :hover */
+  color: white; /* Cambia el color de texto al pasar el mouse */
+  /* Puedes ajustar otros estilos de fondo en :hover según tus preferencias */
+}
+
+
+/* Estilos para botones circulares */
+.circular-button {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background-color: rgb(18, 122, 122);
+  border: 2px solid blue;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  cursor: pointer;
+  overflow: hidden;
+  position: relative;
+  animation: float 3s ease-in-out infinite;
+  /* Agrega la animación */
+}
+
+.circular-button img {
+  width: 300px;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Estilos para los botones */
+.row.d-flex.justify-content-center {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0 -50px;
+  margin-bottom: 280px;
+  /* Ajusta este valor según sea necesario */
+}
+
+.outer-circle {
+  flex: 0 0 auto;
+  text-align: center;
+  margin: 70px;
+  /* Ajusta este valor según sea necesario */
+}
+
+/* Estilos para el zigzag */
+.zigzag {
+  margin-left: 0px;
+}
+
+.zagzig {
+  margin-left: 450px;
+}
+
+@keyframes float {
+  0% {
+      box-shadow: 0 5px 15px 0px rgba(0, 0, 0, 0.6);
+      transform: translateY(0px);
+  }
+
+  50% {
+      box-shadow: 0 25px 15px 0px rgba(0, 0, 0, 0.2);
+      transform: translateY(-20px);
+  }
+
+  100% {
+      box-shadow: 0 5px 15px 0px rgba(0, 0, 0, 0.6);
+      transform: translateY(0px);
+  }
+}
+
+.titulo-cursos {
+
+  text-align: center;
+  color: black;
+  font-weight: bold; /* Para aumentar el grosor del texto */
+  font-family: Arial, sans-serif; /* Establecer la fuente como Arial */
+
+}
+
+
+
+.section-cursos {
+  /* Capa de degradado sobre la imagen de fondo */
+  background-image: linear-gradient(
+      rgba(0, 0, 0, 0.2), /* Color del degradado al comienzo */
+      rgba(0, 0, 0, 0.2) /* Color del degradado al final */
+  ),
+  /* Imagen de fondo */
+  url('../img/cursos5.jpg'); /* Ajusta la ruta según la estructura de carpetas */
+
+  background-size: cover; /* Ajusta el tamaño de la imagen */
+  background-position: center; /* Posición de la imagen */
+  /* Otros estilos opcionales como color de texto, padding, etc. */
+  padding: 50px;
+ 
+  
+  margin-top: 0px; 
+  margin-bottom: 0px;
+}
+
+
+.boton_form_invitacion {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  padding: 10px;
+  font-size: 1rem;
+}
+
+.boton_form_invitacion:hover {
+
+  background-color: #0056b3;
+  
+}
+
+.input_form_invitacion {
+  padding: 10px;
+  font-size: 1rem;
 }

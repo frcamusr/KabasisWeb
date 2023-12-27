@@ -1,9 +1,7 @@
 from django.urls import path
 
 from CursosApp import views
-
 urlpatterns = [
-    
     path('',views.cursos, name="Cursos"),
     
     path('agregar_curso/', views.agregar_curso, name="agregar_curso"),
@@ -16,7 +14,7 @@ urlpatterns = [
 
     path('ver_curso/<id>/', views.ver_curso, name='ver_curso'),
 
-
+    path('obtener_contenidos/', views.obtener_contenidos, name='obtener_contenidos'),
 
     path('agregar_unidad/', views.agregar_unidad, name="agregar_unidad"),
 
@@ -28,8 +26,7 @@ urlpatterns = [
 
 
 
-    path('ver_videos/<int:unidad_id>/', views.ver_videos, name='ver_videos'),
-
+    path('ver_video/<int:video_id>/', views.ver_video, name='ver_video'),
 
 
 
@@ -40,9 +37,7 @@ urlpatterns = [
 
     # URL para Pregunta
     # crear pregunta solo usando el id del quiz
-    path('crear_pregunta/<int:id>/', views.create_question, name='crear_pregunta'),  
-    #crear pregunta usando la vista create_question2 y enviando el id de la actividad
-    path('crear_pregunta2/<int:id>/', views.create_question2, name='crear_pregunta2'),
+    path('crear_preguntaContent/<int:id>/', views.crear_question, name='crear_preguntaContent'),  
 
 
     path('delete_question/<int:id>/', views.delete_question, name='delete_question'),
@@ -64,28 +59,30 @@ urlpatterns = [
  
     # Responder Usuario
     # formulario y agradecimientos
-    path('formulario/<int:idCurso>/<int:unidad>/', views.formulario, name='formulario'),
+    path('formulario2/<int:id>/', views.formulario2, name='formulario2'),
+    path('vista_previa/<int:id>/', views.vista_previa, name='vista_previa'),
+
     path('agradecimientos/', views.agradecimientos, name='agradecimientos'),
 
 
     #  path para listar todo el material de la unidad
     path('listar_material/<int:idCurso>/<int:unidad>/', views.listar_material, name='listar_material'),
-
-
-
-
+    path('actualizar_orden/<str:model_name>/<int:content_id>/<int:new_order>/', views.actualizar_orden, name='actualizar_orden'),
     path('editContenido',views.editContenido, name="editContenido"),
+    
     path('obtener_unidades/<int:curso_id>/', views.obtener_unidades, name="obtener_unidades"),
 
-
+    path('crear_video/<int:idCurso>/<int:unidad>/', views.crear_video, name='crear_video'),
 
     path('agregar_video/', views.agregar_video, name="agregar_video"),
-
     path('listar_video/<id>/', views.listar_video, name="listar_video"),
-
     path('eliminar_video/<id>/', views.eliminar_video, name="eliminar_video"),
+    path('editar_video/<int:id>/', views.editar_video, name='editar_video'),
+    
+    
+    #progreso
+    path('actualizar-progreso/', views.update_progress, name='actualizar_progreso'),
 
-    path('modificar_video/<id>/', views.modificar_video, name="modificar_video"),
 
 
 ]

@@ -27,9 +27,22 @@ SECRET_KEY = 'django-insecure-jl1k_*7sfuc*frpb-&5ievloyoo@@#$q$hhns1ss9_$2iu6m@f
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# BEGIN: email_settings
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'oscargp.94@gmail.com'
+EMAIL_HOST_PASSWORD = 'fjwp nqcd sewu bqxu'
+
+# END: email_settings
+
+
+
 ALLOWED_HOSTS = ['localhost','192.168.1.87','127.0.0.1','192.168.1.38']
 
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = 'survey'
 LOGOUT_REDIRECT_URL = '/'
 
 MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
@@ -68,7 +81,7 @@ ROOT_URLCONF = 'kabasisWeb.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'reactapp/build')],  # Ruta a la carpeta que contiene las plantillas
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -99,13 +112,8 @@ DATABASES = {
             'driver': 'ODBC Driver 17 for SQL Server',
         },
 
-
-
     }
 }
-
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -152,6 +160,8 @@ STATIC_ROOT = os.path.join(BASE_DIR,'static')
 # Configuración de archivos de medios
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'reactapp/build/static')]
 
 
 # Default primary key field type

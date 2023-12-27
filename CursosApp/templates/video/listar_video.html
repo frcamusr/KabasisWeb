@@ -24,7 +24,7 @@
                             <td class="text-center">{{ v.descripcion }}</td>
                             <td class="text-center">
                                 <div class="d-flex justify-content-center">
-                                    <a class="btn btn-primary btn-sm mr-2" href="{% url 'modificar_video' v.id %}">Editar</a>
+                                    <a class="btn btn-primary btn-sm mr-2" href="{% url 'editar_video' v.id %}">Editar</a>
                                     <a class="btn btn-danger btn-sm" href="#" onclick="confirmarEliminacion(event, '{{ v.id }}')">Eliminar</a>
                                 </div>
                             </td>

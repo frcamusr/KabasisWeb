@@ -1,0 +1,53 @@
+{% extends "KabasisWebApp/base.html"%}
+
+{% load static %}
+
+{% block content%}
+
+<section class="page-section cta" style="margin-top: 30px; margin-bottom: 30px;">
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Enviar Formulario de Registro</title>
+        <!-- Añade aquí tus estilos o enlaces a hojas de estilo -->
+    </head>
+    <body>
+        <div class="container">
+            <h1 style="color: white; text-align: center;">Enviar Invitación de Registro</h1>
+            <form method="post" style="display: flex; flex-direction: column; gap: 10px;">
+                {% csrf_token %}
+                <label style="color: white;" for="email">Correo electrónico del destinatario:</label>
+                <input class="input_form_invitacion" type="email" id="email" name="email" placeholder="Invitación personalizada: Ingrese el correo de la persona que desea invitar" required>
+                <button class="boton_form_invitacion" type="submit">Enviar Invitación</button>
+            </form>
+
+            {% if link_registro %}
+                <div>
+                    <p style="color: white;">Copia el enlace de registro para enviarlo por las diferentes plataformas:</p>
+                    <input style="width: 100%; overflow-x: auto; padding: 10px; font-size: 1rem;" type="text" value="{{ link_registro }}" id="linkRegistro" readonly>
+                    <button style="margin-top: 10px;" class="btn btn-info btn-block" onclick="copiarAlPortapapeles()">Copiar Enlace</button>
+                </div>
+            {% endif %}
+
+            <script>
+                function copiarAlPortapapeles() {
+                    var copyText = document.getElementById("linkRegistro");
+                    copyText.select();
+                    document.execCommand("copy");
+            
+                    // Usar SweetAlert para mostrar el mensaje
+                    Swal.fire({
+                        title: '¡Copiado!',
+                        text: 'Enlace copiado al portapapeles: ' + copyText.value,
+                        icon: 'success',
+                        confirmButtonText: 'Ok'
+                    });
+                }
+            </script>
+            
+        </div>
+    </body>
+    </html>
+</section>
+
+{% endblock %}

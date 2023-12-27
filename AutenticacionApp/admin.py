@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser, Empresa
+from .models import CustomUser
 
 class CustomUserAdmin(UserAdmin):
     list_display = ('username', 'email', 'first_name', 'last_name', 'tipo_usuario', 'profile_picture')
@@ -12,12 +12,4 @@ class CustomUserAdmin(UserAdmin):
         ('Fechas Importantes', {'fields': ('last_login', 'date_joined')}),
     )
 
-
-class EmpresaAdmin(admin.ModelAdmin):
-     
-    readonly_fields = ("created", "updated")
-
 admin.site.register(CustomUser, CustomUserAdmin)
-
-
-admin.site.register(Empresa, EmpresaAdmin)

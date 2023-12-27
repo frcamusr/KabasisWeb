@@ -1,15 +1,23 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.db import models
+from django.contrib.auth.models import AbstractUser
+from django.utils.translation import gettext_lazy as _
 
 class CustomUser(AbstractUser):
+    email = models.EmailField(_('email address'), unique=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username']  # Mantén el 'username' para fines de compatibilidad
+
+
     TIPO_USUARIO_CHOICES = (
         ('', 'Selecciona el tipo de usuario'),  # Opción en blanco
-        ('Editor_contenido', 'Editor de contenido'),
-        ('Revisor', 'Revisor'),
-        ('Estudiante', 'Estudiante'),
-        ('Visualizador', 'Visualizador'),
-        ('Reporteria', 'Reporteria'),
-        ('Administrador_empresa', 'Administrador empresa'),
+        ('Administrador', 'Administrador'),
+        ('Alumno', 'Alumno'),
+        ('Administrador Kabasis', 'Administrador Kabasis'),
+        
+        
     )
 
     tipo_usuario = models.CharField(
@@ -41,19 +49,19 @@ class CustomUser(AbstractUser):
 
 
 class Empresa(models.Model):
-    nombre_empresa = models.CharField(max_length=50)
+    nombre_empresa = models.CharField(max_length=50, unique=True) 
     descripcion = models.TextField()
     numero_empleados = models.IntegerField()
     created = models.DateField(auto_now_add=True)
     updated = models.DateField(auto_now=True)
 
     ESTADOS_DE_CUENTA = [
-        ('activo', 'Activo'),
-        ('inactivo', 'Inactivo'),
+        ('activo', 'Activa'),
+        ('inactivo', 'Inactiva'),
         # Puedes añadir más estados aquí
     ]
 
-    estado_cuenta = models.CharField(max_length=20, choices=ESTADOS_DE_CUENTA, default='Activo')
+    estado_cuenta = models.CharField(max_length=20, choices=ESTADOS_DE_CUENTA, default='activa')
 
     class Meta:
         verbose_name = "Empresa"

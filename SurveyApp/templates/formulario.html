@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+{% extends 'KabasisWebApp/base.html' %}
 {% load crispy_forms_tags %}
 
 {% block content %}
@@ -6,23 +6,33 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card shadow-lg p-4">
-                <h2 class="text-center mb-4">Preguntas</h2>
+                <h2 class="text-center mb-4">Test Inicial</h2>
                 <form method="post">
                     {% csrf_token %}
                     {% for pregunta in questions %}
-                        <div class="question mb-4">
-                            <h5>{{ forloop.counter }}. {{ pregunta.text }}</h5>
+                        <div class="question mb-5">
+                            <h5 class="mb-3">{{ forloop.counter }}. {{ pregunta.text }}</h5>
                             {% if pregunta.question_type == 'text' %}
-                                <textarea class="form-control" id="text_answer_{{ pregunta.id }}" name="text_answer_{{ pregunta.id }}" rows="6" placeholder="Escribe tu respuesta aquí (máx. 500 caracteres)" required></textarea>
+                                <textarea class="form-control mb-3" id="text_answer_{{ pregunta.id }}" name="text_answer_{{ pregunta.id }}" rows="6" placeholder="Escribe tu respuesta aquí (máx. 500 caracteres)" required></textarea>
                             {% elif pregunta.question_type == 'option' %}
-                                <input type="radio" id="option_a_{{ pregunta.id }}" name="option_answer_{{ pregunta.id }}" value="a" required>
-                                <label for="option_a_{{ pregunta.id }}">a. {{ pregunta.option_a }}</label><br>
-                                <input type="radio" id="option_b_{{ pregunta.id }}" name="option_answer_{{ pregunta.id }}" value="b" required>
-                                <label for="option_b_{{ pregunta.id }}">b. {{ pregunta.option_b }}</label><br>
-                                <input type="radio" id="option_c_{{ pregunta.id }}" name="option_answer_{{ pregunta.id }}" value="c" required>
-                                <label for="option_c_{{ pregunta.id }}">c. {{ pregunta.option_c }}</label><br>
-                                <input type="radio" id="option_d_{{ pregunta.id }}" name="option_answer_{{ pregunta.id }}" value="d" required>
-                                <label for="option_d_{{ pregunta.id }}">d. {{ pregunta.option_d }}</label><br>
+                            <div class="form-check mb-3">
+                                <input type="radio" class="form-check-input" id="option_a_{{ pregunta.id }}" name="option_answer_{{ pregunta.id }}" value="a" required>
+                                <label class="form-check-label d-inline-block" for="option_a_{{ pregunta.id }}">a. {{ pregunta.option_a }}</label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input type="radio" class="form-check-input" id="option_b_{{ pregunta.id }}" name="option_answer_{{ pregunta.id }}" value="b" required>
+                                <label class="form-check-label d-inline-block" for="option_b_{{ pregunta.id }}">b. {{ pregunta.option_b }}</label>
+                            </div>
+                            {% if pregunta.option_c and pregunta.option_d %}
+                            <div class="form-check mb-3">
+                                <input type="radio" class="form-check-input" id="option_c_{{ pregunta.id }}" name="option_answer_{{ pregunta.id }}" value="c" required>
+                                <label class="form-check-label d-inline-block" for="option_c_{{ pregunta.id }}">c. {{ pregunta.option_c }}</label>
+                            </div>
+                            <div class="form-check mb-3">
+                                <input type="radio" class="form-check-input" id="option_d_{{ pregunta.id }}" name="option_answer_{{ pregunta.id }}" value="d" required>
+                                <label class="form-check-label d-inline-block" for="option_d_{{ pregunta.id }}">d. {{ pregunta.option_d }}</label>
+                            </div>
+                            {% endif %}
                             {% endif %}
                             <input type="hidden" name="question_id_{{ pregunta.id }}" value="{{ pregunta.id }}">
                         </div>
@@ -37,3 +47,4 @@
     </div>
 </div>
 {% endblock %}
+

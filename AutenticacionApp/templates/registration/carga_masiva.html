@@ -13,18 +13,18 @@
 </head>
 
 <body>
-    <section class="page-section cta" style="margin-top: 30px; margin-bottom: 30px; text-align: center;">
+    <section class="page-section cta" style="margin-top: 30px; margin-bottom: 30px;">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-md-8">
                     <div class="card">
                         <div class="card-body">
-                            <h1 style="margin-bottom: 50px;">Carga Masiva de Usuarios</h1>
+                            <h1 >Carga Masiva de Usuarios</h1>
 
                             <form method="post" enctype="multipart/form-data">
                                 {% csrf_token %}
                                 {{ form }}
-                                <button type="submit">Cargar Usuarios</button>
+                                <button class="btn btn-success" type="submit">Cargar Usuarios</button>
                             </form>
                         </div>
                     </div>

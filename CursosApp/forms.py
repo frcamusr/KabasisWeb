@@ -1,10 +1,11 @@
 from django import forms
 from .models import Curso, UnidadCurso, Video
 
+
 class CursoForm(forms.ModelForm):
     class Meta:
         model = Curso
-        fields = ['nombre', 'imagen', 'descripcion']
+        fields = ['nombre', 'imagen', 'descripcion', 'orden']
 
     def __init__(self, *args, **kwargs):
         super(CursoForm, self).__init__(*args, **kwargs)
@@ -23,7 +24,7 @@ class CursoForm(forms.ModelForm):
 class UnidadForm(forms.ModelForm):
     class Meta:
         model = UnidadCurso
-        fields = ['curso', 'titulo', 'descripcion', 'orden']
+        fields = ['curso', 'titulo', 'descripcion', 'orden', 'imagen']
 
 
     def __init__(self, *args, **kwargs):
@@ -84,19 +85,22 @@ class AnswerForm(Form):
         return super().clean()
     
 
-    
-class VideoForm(forms.ModelForm):
+class VideoForm(forms.ModelForm):  # Cambio de Form a ModelForm
     class Meta:
         model = Video
-        fields = ['unidad', 'titulo', 'video_url', 'descripcion']
-
-
+        fields = ['titulo', 'video_url', 'descripcion', 'orden']
+                
     def __init__(self, *args, **kwargs):
         super(VideoForm, self).__init__(*args, **kwargs)
 
         for field_name, field in self.fields.items():
             field.widget.attrs['class'] = 'form-control'  # Agregar la clase 'form-control' a cada campo
 
-            if field_name == 'titulo':
-                field.widget.attrs['placeholder'] = 'Nombre video'  # Agregar un marcador de posición para el campo 'nombre'
+            # Puedes agregar atributos específicos para el campo 'orden'
+            if field_name == 'orden':
+                field.widget.attrs['placeholder'] = 'Orden del video'  # Agregar un marcador de posición para 'orden'
+                # Aquí puedes agregar más atributos específicos si es necesario
+
+     
+
 

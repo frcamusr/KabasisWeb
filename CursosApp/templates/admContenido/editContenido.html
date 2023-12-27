@@ -1,101 +1,102 @@
 {% extends "KabasisWebApp/base.html" %}
 {% load static %}
- 
+
 {% block content %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<style>
+    .transparent-table {
+        background-color: rgba(255, 255, 255, 0.6);
+        border: 1px solid #ddd;
+    }
+</style>
+
 <div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-md-4" id="columna-izquierda">
-            <ul class="list-group">
-                {% for curso in cursos %}
-                <li class="list-group-item">
-                    <h5 class="mb-1">{{curso.nombre}}</h5>
-                    <p class="mb-1">{{curso.descripcion}}</p>
-                    <button class="btn btn-primary btn-sm ver-curso" data-curso="{{curso.id}}">Editar Curso</button>
-                </li>
-                {% endfor %}
-            </ul>
-        </div>
-        <div class="col-md-8">
-            <div class="p-4 border rounded bg-white" id="curso-frame" style="width: 60vw; height: 70vh;">
-             
-              <!--  Mejorar este if para que este mensaje solo se muestre cuando no se selecciona ningun curso
-                           
-                <h2> Bienvenido al menu de edición de contenido. Seleccione un curso para editarlo </h2>
-             
-             
-             -->
- 
-             
-                <h2 id="curso-nombre"></h2>
-                <div id="unidades-container"></div>
-                <div id="botones-edicion" class="mt-3"></div> <!-- Contenedor para los botones de edición -->
-            </div>
-        </div>
-    </div>
+    <table class="table table-bordered transparent-table rounded-lg">
+        <thead>
+            <tr class="bg-primary text-white">
+                <th scope="col" style="width: 30%;">Cursos</th>
+                <th scope="col" style="width: 30%;">Unidad</th>
+                <th scope="col" style="width: 40%;">Opciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <div class="list-group" id="curso-lista">
+                        {% for curso in cursos %}
+                            <button class="list-group-item list-group-item-action curso-btn" data-curso="{{curso.id}}">
+                                <h5 class="mb-1">{{curso.nombre}}</h5>
+                                <p class="mb-1">{{curso.descripcion}}</p>
+                            </button>
+                        {% endfor %}
+                        <button class="btn btn-primary mt-2" id="crear-curso-btn" onclick="location.href='{% url 'listar_curso' %}'">Crear Curso</button>
+                    </div>
+                </td>
+                <td>
+                    <div class="list-group" id="unidad-lista">
+                        <!-- Unidades se llenarán dinámicamente usando JavaScript -->
+                    </div>
+                    <button class="btn btn-primary mt-2" id="crear-unidad-btn" onclick="location.href='{% url 'agregar_unidad' %}'">Crear Unidad</button>
+                </td>
+                <td id="columna-opciones" style="display:none;">
+                    <table class="table transparent-table">
+                        <tbody id="opciones-lista">
+                            <!-- Opciones de contenido se llenarán dinámicamente usando JavaScript -->
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </div>
- 
+
 <script>
-    var verCursoButtons = document.querySelectorAll('.ver-curso');
-    var cursoFrame = document.getElementById('curso-frame');
-    var cursoNombre = document.getElementById('curso-nombre');
-    var unidadesContainer = document.getElementById('unidades-container');
-    var botonesEdicionDiv = document.getElementById('botones-edicion');
- 
-    verCursoButtons.forEach(function(button) {
-        button.addEventListener('click', function(event) {
-            var idCurso = event.target.getAttribute('data-curso');
+    $(document).ready(function() {
+        // Ocultar los botones de "Crear Unidad" y "Opciones" al inicio
+        $('#crear-unidad-btn').hide();
+        $('#columna-opciones').hide();
+
+        $('#curso-lista').on('click', '.curso-btn', function() {
+            var idCurso = $(this).data('curso');
             $.ajax({
-                url: '/obtener_unidades/' + idCurso + '/',
+                url: 'obtener_unidades/' + idCurso + '/',
                 method: 'GET',
                 dataType: 'json',
                 success: function(data) {
                     var unidadesHTML = '';
                     data.unidades.forEach(function(unidad) {
-                        unidadesHTML += '<button class="btn btn-primary mx-1 mb-2 unidad-btn" data-unidad="' + unidad.id + '">' + unidad.titulo + '</button>';
+                        unidadesHTML += '<button class="list-group-item list-group-item-action unidad-btn" data-unidad="' + unidad.id + '">' + unidad.titulo + '</button>';
                     });
-                    cursoNombre.textContent = data.cursoNombre;
-                    unidadesContainer.innerHTML = unidadesHTML;
- 
-                    // Lógica para enviar información del curso, unidad y tipo de edición al hacer clic en un botón de edición
-                    var unidadButtons = document.querySelectorAll('.unidad-btn');
-                    unidadButtons.forEach(function(unidadButton) {
-                        unidadButton.addEventListener('click', function() {
-                            // Obtener información del curso y unidad seleccionados
-                            var cursoId = idCurso;
-                            var unidadId = unidadButton.getAttribute('data-unidad');
-                            var unidadTitulo = unidadButton.textContent;
- 
-                            // Crear los botones de edición
-                            var botonesEdicionHTML = `
-                                <h3>Edición:</h3>
-                                <div class="mb-3">
-                                    <button class="btn btn-info mx-1 agregar-btn" data-tipo="listar_material" data-curso="${cursoId}" data-unidad="${unidadId}">Agregar Contenido de Unidad</button>
-                                   
-                                </div>
-                            `;
- 
-                            // Agregar los botones de edición al contenedor
-                            botonesEdicionDiv.innerHTML = botonesEdicionHTML;
- 
-                            // Lógica para enviar información del curso, unidad y tipo de edición al hacer clic en un botón de edición
-                            var editarButtons = document.querySelectorAll('.agregar-btn');
-                            editarButtons.forEach(function(editarButton) {
-                                editarButton.addEventListener('click', function() {
-                                    var tipoEdicion = editarButton.getAttribute('data-tipo');
-                                    var cursoId = editarButton.getAttribute('data-curso');
-                                    var unidadId = editarButton.getAttribute('data-unidad');
-                                    // Construir la URL con la información del curso, unidad y tipo de edición
-                                    var url = '/${tipoEdicion}/${cursoId}/${unidadId}/';
-                                    // Redirigir al usuario a la URL construida
-                                    window.location.href = url;
-                                });
-                            });
-                        });
+                    $('#unidad-lista').html(unidadesHTML);
+
+                    // Mostrar el botón de "Crear Unidad" siempre debajo de la lista de unidades
+                    $('#crear-unidad-btn').show();
+
+                    // Mostrar la columna de opciones
+                    $('#columna-opciones').show();
+
+                    $('#unidad-lista').on('click', '.unidad-btn', function() {
+                        var unidadId = $(this).data('unidad');
+                        var cursoNombre = $('.curso-btn.active h5').text();
+                        var unidadTitulo = $(this).text();
+
+                        // Agregar fila a la tabla de opciones
+                        var opcionesHTML = '<tr>';
+                        opcionesHTML += '<td>' + cursoNombre + '  ' + unidadTitulo + '</td>';
+                        opcionesHTML += '</tr>';
+                        opcionesHTML += '<tr>';
+                        opcionesHTML += '<td>';
+                        opcionesHTML += '<button class="btn btn-info" onclick="location.href=\'listar_material/' + idCurso + '/' + unidadId + '\';">Administrar Contenido de unidad</button>';
+                        opcionesHTML += '</td>';
+                    
+                            
+                        opcionesHTML += '</tr>';
+                        $('#opciones-lista').html(opcionesHTML);
                     });
                 }
             });
         });
     });
 </script>
- 
 {% endblock %}

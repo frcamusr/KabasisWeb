@@ -1,16 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
-
 from .forms import CursoForm, UnidadForm, VideoForm
-
-from .models import Curso, UnidadCurso
-
+from .models import Curso, Progreso, UnidadCurso
 from django.contrib import messages
-
-
 from django.shortcuts import render, HttpResponse
 from CursosApp.models import Curso, UnidadCurso
 from django.http import JsonResponse
-# importar los modelos de la app SurveyApp
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse
+from .forms import QuestionForm, AnswerForm
+from .models import QuestionContent, AnswerContent, QuizContent
+from django.contrib.auth.decorators import login_required
+from django.urls import reverse
 
 # Create your views here.
 
@@ -77,15 +77,118 @@ def eliminar_curso(request, id):
 
 
 def ver_curso(request, id):
+
     curso = Curso.objects.get(pk=id)
+    
     unidades = UnidadCurso.objects.filter(curso=curso).order_by('orden')
+
+    for index, unidad in enumerate(unidades):
+        unidad.margen_izquierdo = index * 100
+
+    quiz = QuizContent.objects.filter(curso=curso).order_by('orden')  
+    video = Video.objects.filter(curso=curso).order_by('orden')
     
     data = {
         'curso': curso,
         'unidades': unidades,
+        'quiz': quiz, 
+        'video': video
     }
-    
+
     return render(request, 'CursosApp/ver_curso.html', data)
+
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from .models import QuizContent, Video, UnidadCurso, Curso
+from django.views.decorators.http import require_GET
+
+from django.forms.models import model_to_dict
+
+from django.http import JsonResponse
+from .models import QuizContent, Video
+
+
+def obtener_contenidos(request):
+    usuario = request.user
+    unidad_id = request.GET.get('unidad_id', None)
+
+    if unidad_id is not None:
+        try:
+            unidad = UnidadCurso.objects.get(id=unidad_id)
+        except UnidadCurso.DoesNotExist:
+            return JsonResponse({'error': 'Unidad no encontrada'}, status=404)
+
+        quizzes = QuizContent.objects.filter(unidad=unidad).order_by('orden')
+        videos = Video.objects.filter(unidad=unidad).order_by('orden')
+
+        # Combina las listas de quizzes y videos
+        contenidos = sorted(list(quizzes) + list(videos), key=lambda contenido: contenido.orden)
+
+        # Prepara la respuesta JSON
+        data = []
+        for contenido in contenidos:
+            contenido_dict = {
+                'id': contenido.id,
+                'titulo': contenido.titulo,
+            }
+
+            # Verifica si el contenido es un objeto de tipo Video
+            if isinstance(contenido, Video) and hasattr(contenido, 'video_url'):
+                contenido_dict['video_url'] = contenido.video_url
+
+            data.append(contenido_dict)
+
+
+        return JsonResponse(data, safe=False)
+
+    # Si no se proporciona unidad_id o hay otro error
+    return JsonResponse({'error': 'Solicitud inválida'}, status=400)
+
+
+
+@login_required
+def obtener_contenidos(request):
+    usuario = request.user
+    unidad_id = request.GET.get('unidad_id', None)
+
+    if unidad_id is not None:
+        try:
+            unidad = UnidadCurso.objects.get(id=unidad_id)
+        except UnidadCurso.DoesNotExist:
+            return JsonResponse({'error': 'Unidad no encontrada'}, status=404)
+
+        quizzes = QuizContent.objects.filter(unidad=unidad).order_by('orden')
+        videos = Video.objects.filter(unidad=unidad).order_by('orden')
+
+        # Combina las listas de quizzes y videos
+        contenidos = sorted(list(quizzes) + list(videos), key=lambda contenido: contenido.orden)
+
+        # Prepara la respuesta JSON
+        data = []
+        for contenido in contenidos:
+            contenido_dict = {
+                'id': contenido.id,
+                'titulo': contenido.titulo,
+                'visto': False  # Valor predeterminado
+            }
+
+            # Verifica si es un video y si ha sido visto
+            if isinstance(contenido, Video):
+                contenido_dict['video_url'] = contenido.video_url
+                contenido_dict['visto'] = Progreso.objects.filter(
+                    user=usuario, 
+                    unidad=contenido.unidad,
+                    videos_vistos=contenido).exists()
+
+            # Agrega aquí la lógica para los quizzes si es necesario
+            
+
+            data.append(contenido_dict)
+
+        return JsonResponse(data, safe=False)
+
+    # Si no se proporciona unidad_id o hay otro error
+    return JsonResponse({'error': 'Solicitud inválida'}, status=400)
 
 
 
@@ -99,10 +202,10 @@ def agregar_unidad(request):
         if formulario.is_valid():
             unidad = formulario.save(commit=False)  # No guardar inmediatamente para asignar curso
             curso_id = request.POST.get('curso')  # Asumiendo que el campo del formulario se llama 'curso'
-            curso = Curso.objects.get(pk=curso_id)  # Obtén el curso correspondiente desde la base de datos
+
             # Concatenar el nombre del curso al título de la unidad
-            unidad.titulo = f"{curso.nombre} - {unidad.titulo}"
-            unidad.curso = curso  # Asignar el curso al que pertenece esta unidad
+            unidad.titulo = f"{unidad.titulo}"
+
             unidad.save()  # Ahora guarda la unidad con el curso asignado y el nombre modificado
             messages.success(request, 'Unidad creada con éxito.')
             formulario = UnidadForm() 
@@ -118,13 +221,18 @@ def agregar_unidad(request):
 def listar_unidad(request, id):
     curso = Curso.objects.get(pk=id)
     unidades = UnidadCurso.objects.filter(curso=curso).order_by('orden')
-    
+
+    # Calcula los márgenes para los botones restantes
+    margen_izquierdo = [(unidad.orden - 2) * 100 for unidad in unidades[2:]]
+
     data = {
         'curso': curso,
         'unidades': unidades,
+        'margen_izquierdo': margen_izquierdo,
     }
-    
+
     return render(request, 'unidades/listar_unidad.html', data)
+
 
 
 def eliminar_unidad(request, id):
@@ -162,28 +270,20 @@ def modificar_unidad(request, id):
 
 from .models import Video
 
-def ver_videos(request, unidad_id):
-    videos = Video.objects.filter(unidad_id=unidad_id)
-    return render(request, 'video/ver_videos.html', {'videos': videos})
+def ver_video(request, video_id):
+    video = get_object_or_404(Video, pk=video_id)
+    idCurso = video.curso_id
+
+    return render(request, 'video/ver_videos.html', {'video': video , 'idCurso': idCurso})
 
 
 #################CONTENIDO#################
 
 
 
-
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
-from .forms import QuestionForm, AnswerForm
-from .models import QuestionContent, AnswerContent, QuizContent
-from django.contrib.auth.decorators import login_required
-from django.urls import reverse
-
-
-
-
 # Preguntas: crear, eliminar y actualizar
-def create_question(request, id):
+# Preguntas: crear, eliminar y actualizar
+def crear_question(request, id):
     if request.method == 'POST':
         form = QuestionForm(request.POST)
         if form.is_valid():
@@ -201,7 +301,7 @@ def create_question(request, id):
             return redirect(reverse('listar_quiz', args=[id]))
     else:
         form = QuestionForm()
-    return render(request, 'crear_pregunta.html', {'form': form, 'id_quiz': id})
+    return render(request, 'quiz/crear_preguntaContent.html', {'form': form, 'id_quiz': id})
 
 
 
@@ -251,32 +351,93 @@ def update_question(request, id):
     return render(request, 'update_question.html', {'form': form, 'question': question, 'tipo': tipo})
 
 
-
 # mostrar los enlaces de todos los quiz creados para cada unidad y curso:
+from itertools import chain
+
 def listar_material(request, idCurso, unidad):
     quizzes = QuizContent.objects.filter(curso_id=idCurso, unidad_id=unidad)
-    # agregar variable para texto y video
+    video = Video.objects.filter(curso_id=idCurso, unidad_id=unidad)
 
+    # Combina ambas consultas y ordena por el campo 'orden'
+    content_list = sorted(chain(quizzes, video), key=lambda x: x.orden)
+
+    # Obtener valores únicos de orden
+    order_values = set(content.orden for content in content_list)
 
     idCurso = idCurso
     unidad = unidad
 
+    return render(request, 'admContenido/listar_material.html', {'content_list': content_list, 'idCurso': idCurso, 'unidad': unidad, 'order_values': order_values})
 
-    return render(request, 'listar_material.html', {'quizzes': quizzes, 'idCurso': idCurso, 'unidad': unidad})
+def actualizar_orden(request, model_name, content_id, new_order):
+    model_mapping = {
+        'quiz': QuizContent,
+        'video': Video,
+    }
+
+    model_class = model_mapping.get(model_name)
+    
+
+    if not model_class:
+        return JsonResponse({'status': 'error', 'message': 'Modelo no válido'})
+
+    content = get_object_or_404(model_class, id=content_id)
+
+    # Guardar el orden antiguo antes de actualizarlo
+    old_order = content.orden
+
+    # Buscar si existe algún contenido con el nuevo orden
+    
+
+    if QuizContent.objects.filter(orden=new_order).first():
+        # Intercambiar los órdenes inmediatamente
+        existing_content = QuizContent.objects.get(orden=new_order)
+        existing_content.orden = old_order 
+        existing_content.save()
 
 
+    if Video.objects.filter(orden=new_order).first():
+        # Intercambiar los órdenes
+        existing_content = Video.objects.get(orden=new_order)
+        existing_content.orden = old_order
+        existing_content.save()
+
+    # Actualizar el campo de orden
+    content.orden = new_order
+    content.save()
+
+    return JsonResponse({'status': 'success', 'new_order': new_order})
 
 
 #Quiz: crear, editar, eliminar y listar
 
+# views.py
+from django.shortcuts import render, redirect
+from .models import QuizContent
+from django.urls import reverse
+
 def crear_quiz(request, idCurso, unidad):
-    # creamos el quiz sin formulario directamente en la vista usando el modelo Quiz y idCurso y unidad como parametros
-    quiz = QuizContent()
-    quiz.curso_id = idCurso
-    quiz.unidad_id = unidad
-    quiz.save()
-    # redireccionamos a listar_contenido
-    return redirect(reverse('listar_material', args=[idCurso, unidad]))
+    if request.method == 'POST':
+        titulo = request.POST.get('titulo')
+        descripcion = request.POST.get('descripcion')
+        orden = request.POST.get('orden')
+
+        # Crear instancia del modelo con los datos del formulario
+        quiz = QuizContent(
+            curso_id=idCurso,
+            unidad_id=unidad,
+            titulo=titulo,
+            descripcion=descripcion,
+            orden=orden
+        )
+        quiz.save()
+
+        # Redireccionar a donde desees después de guardar el quiz
+        return redirect(reverse('listar_material', args=[idCurso, unidad]))
+
+    # Renderizar el formulario para la creación del quiz
+    return render(request, 'quiz/crear_quiz.html', {'idCurso': idCurso, 'unidad': unidad})
+
 
 # edit_quiz solo envia a la lista de quiz
 def edit_quiz(request, id):
@@ -284,6 +445,39 @@ def edit_quiz(request, id):
     idCurso = quiz.curso_id
     unidad = quiz.unidad_id
     return redirect(reverse('listar_quiz', args=[quiz.id]))
+
+def editar_info_quiz(request, id):
+    quiz = get_object_or_404(QuizContent, id=id)
+
+    if request.method == 'POST':
+        # Actualizar los campos necesarios
+        quiz.titulo = request.POST.get('titulo')
+        quiz.descripcion = request.POST.get('descripcion')
+        quiz.orden = request.POST.get('orden')
+        quiz.save()
+        
+        return redirect(reverse('listar_quiz' , args=[quiz.id]))
+
+    return render(request, 'quiz/editar_info_quiz.html', {'quiz': quiz})
+
+def update_orders_after_delete(model_class, deleted_order):
+    # Obtener todos los elementos con un orden mayor al eliminado
+    # si model_class es QuizContent, entonces ver si existen videos y quiz con orden mayor al eliminado y restarle 1
+
+
+    quizs = QuizContent.objects.filter(orden__gt=deleted_order)
+    videos = Video.objects.filter(orden__gt=deleted_order)
+
+    # Actualizar el orden de los quiz
+    for quiz in quizs:
+        quiz.orden -= 1
+        quiz.save()
+    
+    # Actualizar el orden de los videos
+    for video in videos:
+        video.orden -= 1
+        video.save()
+
 
 # Eliminar quiz y sus preguntas
 def delete_quiz(request, id):
@@ -296,45 +490,17 @@ def listar_quiz(request, id):
     idCurso = quiz.curso_id
     unidad = quiz.unidad_id
     questions = QuestionContent.objects.filter(quiz_id=id)
-    return render(request, 'listar_quiz.html', {'questions': questions, 'quiz':quiz ,'idCurso': idCurso, 'unidad': unidad})
+    return render(request, 'quiz/listar_quiz.html', {'questions': questions, 'quiz':quiz ,'idCurso': idCurso, 'unidad': unidad})
 
 
 
 
 
-def create_question2(request, id): ##pertenece a la actividad?
-    if request.method == 'POST':
-        form = QuestionForm(request.POST)
-        if form.is_valid():
-
-            # Crear una nueva instancia de Question sin ningun parametro
-            question = QuestionContent()
-            question.question_type = form.cleaned_data['question_type']
-            question.text = form.cleaned_data['text']
-            question.option_a = form.cleaned_data['option_a']
-            question.option_b = form.cleaned_data['option_b']
-            question.option_c = form.cleaned_data['option_c']
-            question.option_d = form.cleaned_data['option_d']
-            question.correct_answer = form.cleaned_data['correct_answer']
-            question.save()
-            # Obtener la instancia de la actividad
-            
-            # Agregar la pregunta a la lista de preguntas de la actividad
-            
-
-            # Redirigir a la página del listar actividades
-            return redirect(reverse('listar_actividad', args=[id]))
-
-    else:
-        form = QuestionForm()
-    return render(request, 'crear_pregunta.html', {'form': form, 'id': id})
 
 
-
-@login_required 
-def formulario(request, idCurso, unidad):
+def formulario2(request, id):
     # Obtener todas las preguntas
-    questions = QuestionContent.objects.filter(curso_id=idCurso, unidad_id=unidad)
+    questions = QuestionContent.objects.filter(quiz_id=id)
     if request.method == 'POST':
         
         for pregunta in questions:
@@ -362,14 +528,23 @@ def formulario(request, idCurso, unidad):
     else:
         form = AnswerForm()
 
-    return render(request, 'formulario.html', {'form': form, 'questions': questions})
+    return render(request, 'admContenido/formulario.html', {'form': form, 'questions': questions})
 
 
 
 # def agradecimientos, este tendra un mensaje de agradecimiento por haber respondido la encuesta
 def agradecimientos(request):
-    return render(request, 'agradecimientos.html')
+    return render(request, 'admContenido/agradecimientos.html')
 
+# definimos la vista previa del quiz, este debe ser igual al formulario pero sin el boton de enviar y sin guardar las respuestas
+def vista_previa(request, id):
+    # Obtener todas las preguntas
+    questions = QuestionContent.objects.filter(quiz_id=id)
+
+    # Puedes hacer lo que necesites con las preguntas para la vista previa,
+    # como pasarlas al template y renderizarlas
+
+    return render(request, 'admContenido/vista_previa.html', {'id':id,'questions': questions})
 
 
 def editContenido(request):
@@ -409,9 +584,23 @@ def obtener_contenido(request, unidad_id):
     # retornar la data en formato json para que pueda ser leida por javascript
     return JsonResponse(data)
 
-
-
 ############Video######################
+def crear_video(request, idCurso, unidad):
+    if request.method == 'POST':
+        form = VideoForm(request.POST)
+        if form.is_valid():
+            # Crear una nueva instancia de Contenido y asignar el curso y unidad
+            video = Video(curso_id=idCurso, unidad_id=unidad)
+            video.titulo = form.cleaned_data['titulo']
+            video.video_url = form.cleaned_data['video_url']
+            video.descripcion = form.cleaned_data['descripcion']
+            video.orden = form.cleaned_data['orden']
+            video.save()
+            # Redirigir a la página del quiz
+            return redirect(reverse('listar_material', args=[idCurso, unidad]))
+    else:
+        form = VideoForm()
+    return render(request, 'video/crear_video.html', {'form': form, 'idCurso': idCurso, 'unidad': unidad})
 
 def agregar_video(request):
     if request.method == 'POST':
@@ -454,32 +643,52 @@ def listar_video(request, id=None):
 
 def eliminar_video(request, id):
     video = get_object_or_404(Video, pk=id)
+    deleted_video_order = Video.objects.get(id=id).orden
     unidad_id = video.unidad.id  # Obtiene el ID del curso al que pertenece la unidad
+
     video.delete()
+    update_orders_after_delete(Video, deleted_video_order)
     messages.success(request, "video eliminado correctamente")
     # Modifica la siguiente línea para pasar el ID correctamente
-    return redirect('listar_video', id=unidad_id)
+    # return a listar_material con el idCurso y unidad
+    return redirect('listar_material', idCurso=video.curso.id, unidad=unidad_id)
 
 
 
 
-def modificar_video(request, id):
-    video = get_object_or_404(Video, id=id)
-    unidad_id = video.unidad.id  # Obtiene el ID del curso al que pertenece la unidad
-
-    data = {
-        'form': VideoForm(instance=video)
-    }
+def editar_video(request, id):
+    video = Video.objects.get(id=id)
+    idCurso = video.curso_id
+    unidad = video.unidad_id
 
     if request.method == 'POST':
-        formulario = VideoForm(data=request.POST, instance=video, files=request.FILES)
-        if formulario.is_valid():
-            formulario.save()
-            messages.success(request, "Video actualizado correctamente")
-            
-            # Redirige a la vista 'listar_unidad' con el ID del curso como parámetro
-            return redirect('listar_video', id=unidad_id)
+        form = VideoForm(request.POST, instance=video)  # Utiliza instance=video aquí
+        if form.is_valid():
+            form.save()
+            return redirect(reverse('listar_material', args=[idCurso, unidad]))
+    else:
+        form = VideoForm(instance=video)  # Y aquí también
 
-        data["form"] = formulario
+    return render(request, 'video/modificar_video.html', {'form': form, 'idCurso': idCurso, 'unidad': unidad})
 
-    return render(request, "video/modificar_video.html", data)
+
+
+
+def update_progress(request):
+    video_id = request.POST.get('video_id')
+    user = request.user
+
+    try:
+        video = Video.objects.get(id=video_id)
+        progreso, created = Progreso.objects.get_or_create(user=user, unidad=video.unidad)
+        progreso.videos_vistos.add(video)
+        progreso.save()
+
+        return JsonResponse({'status': 'success', 'message': 'Progreso actualizado.'})
+    except Video.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Video no encontrado.'}, status=404)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+
+
